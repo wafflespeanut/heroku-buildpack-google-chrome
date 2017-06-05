@@ -35,7 +35,7 @@ function indent() {
 if [ -f $ENV_DIR/GOOGLE_CHROME_CHANNEL ]; then
   channel=$(cat $ENV_DIR/GOOGLE_CHROME_CHANNEL)
 else
-  channel=stable
+  channel=beta
 fi
 
 # Setup bin and shim locations for desired channel, and detect invalid channels
@@ -146,5 +146,20 @@ cp $SHIM $BIN_DIR/google-chrome
 # export the chrome binary location, so it's easier to tell chromedriver
 # about the non-standard location
 cat <<EOF >$BUILD_DIR/.profile.d/010_google-chrome.sh
-export GOOGLE_CHROME_BIN=$BIN
+export GOOGLE_CHROME_PATH=$BIN
+EOF
+
+topic "Downloading and installing ChromeDriver"
+mkdir -p $BUILD_DIR/vendor/chromedriver
+
+chromedriver_url="https://chromedriver.storage.googleapis.com/2.29/chromedriver_linux64.zip"
+curl $chromedriver_url -s -o $BUILD_DIR/vendor/chromedriver/chromedriver.zip
+unzip $BUILD_DIR/vendor/chromedriver/chromedriver.zip -d $BUILD_DIR/vendor/chromedriver
+rm $BUILD_DIR/vendor/chromedriver/chromedriver.zip
+ls -lah $BUILD_DIR/vendor/chromedriver
+
+topic "Writing profile script"
+mkdir -p $BUILD_DIR/.profile.d
+cat <<EOF >$BUILD_DIR/.profile.d/chromedriver.sh
+export PATH="\$HOME/vendor/chromedriver:\$PATH"
 EOF
